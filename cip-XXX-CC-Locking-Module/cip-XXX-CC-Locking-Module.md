@@ -2,7 +2,7 @@
 Number: CIP-XXX
 Layer: Daml
 Title: CC Locking Module — Phase 2 Primitive
-Author(s): Avro Digital w/ Community Working Group
+Author(s): Luke Farrell (Cashen), Ian Hensel (Avro) w/ Community Working Group
 Type: Standards Track
 Status: Draft
 Created: 2026-05-22

@@ -55,12 +55,7 @@ The requirements in §4 must be sufficient to support, on-chain and continuously
 - Application-layer workflows (commercial deal terms, marketplace mechanics, off-chain coordination), except insofar as they constrain primitive behavior (see Appendix A).
 - Off-platform implementation details (custody integrations, dashboard providers, wallet UX).
 
-### Source documents
-
-- [CIP-0105: SV Locking & Long-Term Commitment Framework](../cip-0105/cip-0105.md)
-- [CIP-0116: Featured App Locking](../cip-0116/cip-0116.md)
-- [SV Locking Operational Guidelines](https://github.com/canton-foundation/configs/blob/main/Super%20Validator%20Operational%20Processes/SV-Locking-Process.md)
-- [CC Locking Module — Requirements and Implementation Approaches (working group)](https://docs.google.com/document/d/13zl8ILEWq6CvSALk2LA79I2rE1PHfni1EFf5ywr-Aik/edit?tab=t.0#heading=h.dtx31zjb1okc) — this CIP draws Section A (Requirements) directly from that document.
+See §11 for source documents and references.
 
 ## 4. Specification
 
@@ -140,7 +135,7 @@ Each Locked position MUST be associated with a beneficiary identifier. The benef
 
 The primitive MUST distinguish between SV-operator beneficiaries and Featured-App beneficiaries, because their tier-evaluation rules differ. (CIP-0105 §4 vs CIP-0116 §1.)
 
-Whether the type is stored explicitly on the `ActiveLockContext` or derived from external registries is a design point flagged for working-group discussion (see §10).
+Whether the type is stored explicitly on the `ActiveLockContext` or derived from external registries is left to the implementation.
 
 #### 4.3.3 Only ActiveLockContext contributes to beneficiary aggregation *(Compute)*
 
@@ -368,7 +363,7 @@ Custodial and counterparty arrangements vary widely (self-custody, single-custod
 
 ### 6.5 Candidate implementation paths (illustrative)
 
-The working-group requirements document (linked in §3) evaluates two implementation paths that the working group considers functionally equivalent at the requirements level. **Both are listed here as examples of how the requirements in §4 can be satisfied. The choice of path is not made by this CIP and remains open to further engineering input from Splice contributors.** A future revision of this CIP — or a subsequent Standards Track CIP — will record the selected approach.
+The working-group requirements document (linked in §11) evaluates two implementation paths that the working group considers functionally equivalent at the requirements level. **Both are listed here as examples of how the requirements in §4 can be satisfied. The choice of path is not made by this CIP and remains open to further engineering input from Splice contributors.** A future revision of this CIP — or a subsequent Standards Track CIP — will record the selected approach.
 
 #### Path A — Amulet root state
 
@@ -475,3 +470,4 @@ This CIP is licensed under CC0-1.0: [Creative Commons CC0 1.0 Universal](https:/
 ## Changelog
 
 - 2026-05-22: Initial draft published. Section A requirements specification with Path A and Path D summarized as illustrative implementations pending further engineering input.
+- 2026-05-26: Review feedback. Moved Source documents subsection out of §3 (consolidated under §11 References). Reworded §4.3.2 to frame the beneficiary-type storage question as implementation discretion rather than an open working-group item. Updated cross-reference in §6.5 from §3 to §11.

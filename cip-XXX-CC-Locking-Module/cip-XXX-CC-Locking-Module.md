@@ -450,9 +450,8 @@ The following items are flagged for working-group discussion and are not resolve
 1. **Atomic withdraw inside `Substitute` on `VestingLockContext`** (§4.6.4). The alternative is to require the holder to call `Withdraw` before `Substitute` as a two-step process and reject `Substitute` if any available balance remains. Atomic withdraw is operationally simpler; two-step is more conservative. The choice affects authorization semantics and the indexer event surface.
 2. **Per-round indexing performance.** Continuous evaluation cadence (§4.5.2) combined with high-frequency state changes (substitutions, partial unlocks) may produce significant indexer load. Performance implications and any required indexer infrastructure standards should be discussed.
 3. **Foundation operational tooling at Phase 2 cadence.** Underlock and restoration events fire at the round in which the threshold is crossed (§4.5.3 / §4.5.4). Whether existing Foundation tooling and SV/FA reporting infrastructure can consume these events at continuous cadence — and what changes to current Phase 1 dashboards and notification systems may be required — is a separate operational question.
-4. **Beneficiary type on `ActiveLockContext` vs derived from external registries** (§4.3.2). Storage on the contract is the default in this draft; an alternative is to derive the type at query time from an external registry of SVs and FAs. The choice affects the contract schema and the query surface.
-5. **Rewards split mechanics and rules.** For active-round rewards and escrowed milestone rewards, the working group has flagged the need to specify in what state rewards are delivered to beneficiaries, and how disputes about escrow timelines are handled. See §4.8.
-6. **Metadata and traffic.** Onchain metadata and traffic utilization implications of the candidate paths, particularly under continuous evaluation, should be assessed for impact on network performance.
+4. **Rewards split mechanics and rules.** For active-round rewards and escrowed milestone rewards, the working group has flagged the need to specify in what state rewards are delivered to beneficiaries, and how disputes about escrow timelines are handled. See §4.8.
+5. **Metadata and traffic.** Onchain metadata and traffic utilization implications of the candidate paths, particularly under continuous evaluation, should be assessed for impact on network performance.
 
 ## 11. References
 
@@ -470,4 +469,4 @@ This CIP is licensed under CC0-1.0: [Creative Commons CC0 1.0 Universal](https:/
 ## Changelog
 
 - 2026-05-22: Initial draft published. Section A requirements specification with Path A and Path D summarized as illustrative implementations pending further engineering input.
-- 2026-05-26: Review feedback. Moved Source documents subsection out of §3 (consolidated under §11 References). Reworded §4.3.2 to frame the beneficiary-type storage question as implementation discretion rather than an open working-group item. Updated cross-reference in §6.5 from §3 to §11.
+- 2026-05-26: Review feedback. Moved Source documents subsection out of §3 (consolidated under §11 References). Reworded §4.3.2 to frame the beneficiary-type storage question as implementation discretion rather than an open working-group item, and removed the corresponding entry from §10 (renumbered remaining items). Updated cross-reference in §6.5 from §3 to §11.

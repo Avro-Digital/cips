@@ -623,23 +623,31 @@ Single-SV and development networks have no such constraint.
 
 ## Reference implementation
 
-The reference implementation is a stacked set of pull requests on the
-[canton-network/splice-sv-voting-dapp][fork] feature fork of Splice. **All three
-are unmerged as of 2026-08-05**, and the Daml PR is awaiting maintainer
-approval.
+The reference implementation is **two stacked pull requests** on the
+[canton-network/splice-sv-voting-dapp][fork] feature fork of Splice. Both are
+unmerged as of 2026-08-17, and the Daml PR is awaiting maintainer approval.
 
 | PR | Contents | State |
 | --- | --- | --- |
 | [#12][pr12] | The Daml change: `VoteDelegation`, `DsoRules_Fetch`, the optional `voterParty` arguments, and Daml Script tests | Open, CI green, awaiting maintainer approval |
-| [#19][pr19] | Reference client: the SV frontend in a mode that logs in with a CIP-0103 wallet, reads from Scan, and submits through the delegation | Open, stacked on #12 |
-| [#20][pr20] | Cross-participant integration test of the delegated ledger path | Merged into the #19 branch |
+| [#19][pr19] | Reference client: the SV frontend in a mode that logs in with a CIP-0103 wallet, reads from Scan, and submits through the delegation; plus the cross-participant CI integration test | Open, stacked on #12 |
+
+The integration-test work was raised as two further PRs, [#20][pr20] and
+[#24][pr24], only so each could be shown green in CI independently. Both have
+since been squashed into #19 and are not separate deliverables. #20's
+`VoteDelegationIntegrationTest` was subsequently dropped in favor of #24's
+`SvDappModeFrontendIntegrationTest`, which drives the same delegated ledger path
+through the real UI and wallet gateway rather than through direct ledger
+commands.
 
 Artifacts:
 
 - `daml/splice-dso-governance/daml/Splice/DsoRules/VoteDelegation.daml`
 - `daml/splice-dso-governance/daml/Splice/DsoRules.daml`
 - `daml/splice-dso-governance-test/daml/Splice/Scripts/TestGovernance.daml`
-- `apps/app/src/test/scala/.../integration/tests/VoteDelegationIntegrationTest.scala`
+- `apps/sv/frontend/src/dapp/{discoverVoteDelegation,voteDelegationCommands,voteDelegationSubmission}.ts`
+- `apps/app/src/test/scala/.../integration/tests/SvDappModeFrontendIntegrationTest.scala`
+- `apps/app/src/test/scala/.../integration/tests/WalletGatewayTestFixture.scala`
 
 ### Test matrix
 
@@ -652,21 +660,38 @@ Artifacts:
 | A request that names a party other than the delegation's `voterParty` is rejected | `testVoteDelegationRejectsWrongVoterParty` |
 | A cast that names an SV other than the delegation's is rejected | `testVoteDelegationCastVoteRejectsWrongSv` |
 | A cast that names a party other than the delegation's `voterParty` is rejected | `testVoteDelegationCastVoteRejectsWrongVoterParty` |
-| A delegated party on a participant that is not the SV's casts with disclosed `DsoRules` and `VoteRequest`, recorded against the SV | `VoteDelegationIntegrationTest`: "delegated voter can cast a vote attributed to the SV" |
-| The same, for a request | `VoteDelegationIntegrationTest`: "delegated voter can request a vote attributed to the SV" |
-| Wrong-SV ballot rejected across participants | `VoteDelegationIntegrationTest`: "VoteDelegation_CastVote rejects a ballot for the wrong SV" |
+| A delegated party on a participant that is not the SV's, holding its key in a CIP-0103 wallet, casts through the UI with disclosed `DsoRules` and `VoteRequest`, and the ballot is recorded against the SV and not against the voter | `SvDappModeFrontendIntegrationTest`: "connect wallet, discover `VoteDelegation`, and cast a vote attributed to the SV" |
 | Delegation discovery by ACS query; zero or several matches surface an error | `discover-vote-delegation.test.ts` |
 | Command construction, disclosure, stale-contract-id re-resolution, wallet rejection | `vote-delegation-commands.test.ts`, `vote-delegation-submission.test.ts` |
 
-**Not yet covered.** There is no automated end-to-end test through a live
-CIP-0103 wallet. The wallet transport is exercised manually and, in the
-reference client's test suite, against a mocked signing seam. To close that gap,
-a conforming wallet must provide a headless approval mode.
+The cross-participant test allocates the voter party through the reference
+wallet gateway (`@canton-network/wallet-gateway-remote`) on a validator
+participant that does not host DSO contracts, has the SV create the
+`VoteDelegation` for it, seeds an open `VoteRequest` from a second SV, and drives
+the connect and submit CIP-0103 approvals in the browser. It then asserts
+on-ledger that the delegating SV's `Vote` is present with `accept = true` and
+that no `Vote` exists for the voter party.
+
+**Not yet covered.**
+
+- **Third-party wallets.** The end-to-end path is automated against the
+  reference wallet gateway only. No conforming partner wallet is exercised in
+  CI, and doing so requires the wallet to offer a headless or scriptable
+  approval mode.
+- **The delegated request path across participants.** `VoteDelegation_RequestVote`
+  is covered by Daml Script (`testVoteDelegationRequestVote`) and by the
+  reference client's unit tests, but not by a cross-participant integration
+  test. Only the cast path is.
+- **Negative cases across participants.** Wrong-SV and wrong-`voterParty`
+  rejections are asserted at the Daml Script level. The cross-participant
+  negative case that `VoteDelegationIntegrationTest` carried went away when that
+  test was dropped, and was not reproduced in the frontend test.
 
 [fork]: https://github.com/canton-network/splice-sv-voting-dapp
 [pr12]: https://github.com/canton-network/splice-sv-voting-dapp/pull/12
 [pr19]: https://github.com/canton-network/splice-sv-voting-dapp/pull/19
 [pr20]: https://github.com/canton-network/splice-sv-voting-dapp/pull/20
+[pr24]: https://github.com/canton-network/splice-sv-voting-dapp/pull/24
 
 ## Open questions
 
@@ -707,6 +732,14 @@ These are unresolved and are the intended focus of review.
 
 ## Changelog
 
+- **2026-08-17:** Corrected the Reference implementation section per Eric's
+  review. The implementation is two stacked PRs, not three: #20 and #24 were
+  split out only to show CI green independently and are squashed into #19. #20's
+  `VoteDelegationIntegrationTest` has since been dropped in favor of #24's
+  `SvDappModeFrontendIntegrationTest`, so the test matrix, artifact list, and
+  coverage gaps were rewritten against what the branch actually contains — which
+  means the end-to-end wallet path is no longer an open gap, and the
+  cross-participant request and negative cases now are.
 - **2026-08-05:** Initial draft. Replaces the withdrawn
   `cip-XXXX-SV-Governance-Voter` draft
   ([canton-foundation/cips#210](https://github.com/canton-foundation/cips/pull/210),

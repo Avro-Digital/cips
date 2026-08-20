@@ -625,11 +625,11 @@ Single-SV and development networks have no such constraint.
 
 The reference implementation is **two stacked pull requests** on the
 [canton-network/splice-sv-voting-dapp][fork] feature fork of Splice. Both are
-unmerged as of 2026-08-17, and the Daml PR is awaiting maintainer approval.
+unmerged as of 2026-08-20; the Daml PR is approved and awaiting merge.
 
 | PR | Contents | State |
 | --- | --- | --- |
-| [#12][pr12] | The Daml change: `VoteDelegation`, `DsoRules_Fetch`, the optional `voterParty` arguments, and Daml Script tests | Open, CI green, awaiting maintainer approval |
+| [#12][pr12] | The Daml change: `VoteDelegation`, `DsoRules_Fetch`, the optional `voterParty` arguments, and Daml Script tests | Open, CI green, approved by a Splice maintainer 2026-08-05, awaiting merge |
 | [#19][pr19] | Reference client: the SV frontend in a mode that logs in with a CIP-0103 wallet, reads from Scan, and submits through the delegation; plus the cross-participant CI integration test | Open, stacked on #12 |
 
 The integration-test work was raised as two further PRs, [#20][pr20] and
@@ -732,6 +732,10 @@ These are unresolved and are the intended focus of review.
 
 ## Changelog
 
+- **2026-08-20:** Corrected the approval state of the Daml PR. It was described
+  as awaiting maintainer approval; it was in fact approved on 2026-08-05 and is
+  mergeable, awaiting merge only. Both reference-implementation PRs remain
+  unmerged.
 - **2026-08-17:** Corrected the Reference implementation section per Eric's
   review. The implementation is two stacked PRs, not three: #20 and #24 were
   split out only to show CI green independently and are squashed into #19. #20's

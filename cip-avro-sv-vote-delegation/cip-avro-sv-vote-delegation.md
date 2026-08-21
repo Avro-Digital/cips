@@ -57,10 +57,10 @@ can use it. All changes are additive and comply with
 - One read-only `DsoRules_Fetch` choice.
 
 These parts of governance do not change: tallying, quorum, confirmation,
-execution, close, cooldown, automation, SV membership, reward weights, and the SV
-locking framework of [CIP-0105][cip-0105]. `Vote`, `VoteRequest`, and `SvInfo` do
-not change. Every `DsoRules` choice other than the two named above also does not
-change.
+execution, close, cooldown, and automation. SV membership, reward weights, and
+the SV locking framework of [CIP-0105][cip-0105] also do not change. `Vote`,
+`VoteRequest`, and `SvInfo` do not change, nor does any `DsoRules` choice other
+than the two named above.
 
 ### The delegation template
 
@@ -177,12 +177,12 @@ the signatory SV. Both paths therefore write the same entry, and
 
 ### Discovery and submission
 
-The client of a delegated party queries the active contract set to find its
-delegation. It looks for `VoteDelegation` contracts that name it as
-`voterParty`. It reads the SV party and the contract id from that contract
-instead of from configuration. The ledger does not prevent an SV from signing
-several delegations, and it does not prevent several SVs from delegating to the
-same party. This query is therefore a client convention, not a ledger invariant.
+The client of a delegated party finds its delegation by a query on the active
+contract set, for `VoteDelegation` contracts that name it as `voterParty`. It
+reads the SV party and the contract id from that contract instead of from
+configuration. The ledger does not prevent an SV from signing several
+delegations, or several SVs from delegating to the same party. Discovery is
+therefore a client convention, not a ledger invariant.
 
 The participant of the delegated party does not need to host DSO contracts. A
 delegated submission therefore attaches the contracts that it reads as
@@ -223,34 +223,32 @@ no existing authority.
 **Why a separate template and not new `DsoRules` choices.** The delegation needs
 the SV as its signatory, and the authority of the SV must reach the `DsoRules`
 exercise. A guard on a contract that the SV signed satisfies both conditions
-together. The authors considered dedicated choices such as
-`DsoRules_CastGovernanceVote` and rejected them. Such choices duplicate the cast
-logic. Each duplicate must then track the original for cooldown, deadlines, and
-well-formedness.
+together. Dedicated choices such as `DsoRules_CastGovernanceVote` would instead
+duplicate the cast logic. Each duplicate must then track the original for
+cooldown, deadlines, and well-formedness.
 
 **Why optional trailing arguments on the existing choices.** `DsoRules` must
 know that two parties authorized an exercise, so that the delegated party
 appears in the authorizing set. An optional trailing argument and an additional
 controller achieve this. They add no branch to the choice body, and they require
-no change from existing callers. They also comply with the SCU rule that new
-fields are optional and come last.
+no change from existing callers. SCU also requires that new fields are optional
+and come last.
 
 **Why the SV signs and not the DSO.** A delegation is an agreement between an SV
 and the party that it selects. During review of the predecessor design, Splice
 maintainers concluded that the network does not need to know about that
-agreement. A DSO signature would also require three more functions: a default
-delegation at onboarding, a governance action to change the delegated party, and
-cleanup of duplicates. None of these adds control, because the signatory SV can
-already replace the delegated party at any time.
+agreement. A DSO signature would also require a default delegation at
+onboarding, a governance action to change the delegated party, and cleanup of
+duplicates. None of these adds control, because the signatory SV can already
+replace the delegated party at any time.
 
 **Why no action classification.** The predecessor design divided
 `ActionRequiringConfirmation` into voter-eligible actions and operator-only
 actions. An SV that trusts a party to cast its votes has already expressed that
 trust. A Daml-level allowlist also implies an enforcement guarantee that the
 model does not give, because the operator can ignore the allowlist and vote
-directly. Which actions need which authority is a real question. Digital Asset
-answers it upstream in the `voteType` of [splice#6247][pr6247], and a second
-classification here would compete with that one.
+directly. Digital Asset answers this question upstream in the `voteType` of
+[splice#6247][pr6247], so a second classification here would compete with it.
 
 **CIP-0103 compatibility.** `voterParty` controls the relay choices, and
 `voterParty` can be an externally-hosted party. A delegated submission can
@@ -264,8 +262,8 @@ useful on its own, so the relationship is compatibility and not dependence.
   withdrawn predecessor design ([cips#210][pr210]). Splice maintainers rejected
   it as too large for the problem.
 - **Store the delegated party on `SvInfo`.** Rejected. It couples governance
-  voting to the SV membership record, and it makes a change of delegated party
-  into an edit of SV membership.
+  voting to the SV membership record, and it makes a change of delegated party an
+  edit of SV membership.
 - **Action allowlists, either hardcoded or configurable.** Rejected, as *Why no
   action classification* explains. A configurable list would also let a
   delegated party vote to expand its own authority.
@@ -273,34 +271,28 @@ useful on its own, so the relationship is compatibility and not dependence.
   `bindingCid`. Dropped to keep the change small. Attribution now comes from the
   transaction history. See open question 3.
 - **DSO as observer, so that Scan can read the delegation.** An earlier revision
-  did this, and maintainers asked for its removal. The delegated party is
-  already visible as a controller on the `DsoRules` exercise.
-- **Delegate the close, the confirmation, or the execution of a vote.**
-  Rejected. Automation closes a vote request, and confirmation and execution are
-  operator responsibilities.
+  did this, and maintainers asked for its removal. A controller on the
+  `DsoRules` exercise already names the delegated party.
+- **Delegate the close, the confirmation, or the execution of a vote.** Rejected.
+  Automation closes a vote request, and confirmation and execution are operator
+  responsibilities.
 
 ### Relationship to in-flight upstream work
 
-[splice#6247][pr6247] ("Dso Governance POC", Digital Asset) adds `SvRightOwner`.
-That template holds a `rightOwnerParty`, separate vote and reward weights, and
-weight-based tallying. It decides which party holds the vote of an SV. This CIP
-decides how the party that holds the vote can let another party exercise it. The
-two changes therefore work together. Under [splice#6247][pr6247], the rights
-owner becomes the signatory of the delegation instead of the operator. The
-template and both relay choices do not otherwise change.
+Two upstream drafts change which party holds the vote of an SV.
+[splice#6247][pr6247] ("Dso Governance POC", Digital Asset) adds `SvRightOwner`,
+which holds a `rightOwnerParty` and separate vote and reward weights.
+[splice#5567][pr5567] moves SV weight management on-ledger. Neither conflicts
+with this CIP in substance. They decide which party holds the vote, and this CIP
+decides how that party can let another party exercise it. Under
+[splice#6247][pr6247], the rights owner signs the delegation instead of the
+operator, and nothing else changes.
 
-One conflict needs a decision from the maintainers. [splice#6247][pr6247]
-appends `rightOwnerCid : Optional (ContractId SvRightOwner)` to the same two
-choices, in the same trailing position that this CIP uses for
-`voterParty : Optional Party`. Both arguments are optional and additive, so they
-can coexist. However, the change that merges first sets the order. If both
-changes merge, the specification must define how `getAndValidateVotingParty` in
-[splice#6247][pr6247] interacts with the co-controller in this CIP. See open
-question 1.
-
-[splice#5567][pr5567] moves SV weight management on-ledger. It changes reward
-weights and `DsoRules.svs` membership. This CIP changes neither. The authors
-expect no interaction, except that both changes edit `DsoRules.daml`.
+One conflict of form needs a decision from the maintainers.
+[splice#6247][pr6247] appends `rightOwnerCid : Optional (ContractId SvRightOwner)`
+to the same two choices, in the same trailing position that this CIP uses for
+`voterParty : Optional Party`. Both arguments are optional, so they can coexist,
+but the change that merges first sets the order. See open question 1.
 
 ## Trust model
 
@@ -404,8 +396,10 @@ them across participants.
 
 1. **Argument order against [splice#6247][pr6247].** Which argument comes first
    on `DsoRules_RequestVote` and `DsoRules_CastVote`, `voterParty` or
-   `rightOwnerCid`? Does `SvRightOwner` make the delegation redundant in the
-   target state of Digital Asset?
+   `rightOwnerCid`? If both changes merge, how does `getAndValidateVotingParty`
+   in [splice#6247][pr6247] interact with the co-controller in this CIP? Does
+   `SvRightOwner` make the delegation redundant in the target state of Digital
+   Asset?
 2. **Delegation uniqueness.** Should the ledger enforce at most one live
    delegation for each SV, and at most one source SV for each delegated party? A contract key on `sv`, a registry, or a duplicate-create guard could
    do this. The alternative is to keep both rules as client conventions. The
@@ -419,15 +413,13 @@ them across participants.
 
 ## Changelog
 
-- **2026-08-21:** Rewrote the prose against the ASD-STE100 rules for descriptive
-  writing. Split long sentences, changed passive constructions to active ones,
-  removed metaphorical uses of "surface", "slot", and "shape", and reduced the
-  number of parenthetical asides.
 - **2026-08-21:** Cut the draft to about half its length, to match the level of
   detail in comparable Daml-layer CIPs. Removed the test matrix, the list of
   votable action constructors, and the per-file artifact list. Merged the Trust
   model and Security considerations sections, which asserted the same properties
-  twice. Moved the process questions to the pull request. The sections now
+  twice. Moved the process questions to the pull request. Then rewrote the prose
+  against the ASD-STE100 rules for descriptive writing: shorter sentences, active
+  voice, no metaphorical terms, and fewer parenthetical asides. The sections now
   follow the order in CIP-0000.
 - **2026-08-20:** Corrected the approval state of the Daml pull request. The
   draft described it as awaiting maintainer approval. A maintainer in fact
@@ -435,12 +427,10 @@ them across participants.
 - **2026-08-17:** Corrected the reference-implementation section. The
   implementation is two stacked pull requests, not three. Rewrote the test
   inventory and the coverage gaps against the content of the branch.
-- **2026-08-05:** Initial draft. Replaces the withdrawn
+- **2026-08-05:** Initial draft. It replaces the withdrawn
   `cip-XXXX-SV-Governance-Voter` draft ([cips#210][pr210], closed 2026-08-04).
-  That draft specified a DSO-signed `SvGovernanceVoter` binding, a hardcoded
-  action allowlist, confirmation-quorum rotation, `Vote` attribution fields,
-  close-time staleness filtering, and binding garbage collection. Splice review
-  narrowed all of it out, and its reference implementation
+  Splice review narrowed out that draft's DSO-signed binding, action allowlist,
+  quorum rotation, and `Vote` attribution fields. Its reference implementation
   ([canton-network/splice#5533](https://github.com/canton-network/splice/pull/5533))
   closed unmerged on 2026-06-10. This draft specifies only what the current
   reference implementation contains.

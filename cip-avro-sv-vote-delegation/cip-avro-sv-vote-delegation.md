@@ -46,6 +46,11 @@ This CIP is licensed under CC0-1.0:
 
 ## Specification
 
+This CIP specifies the delegation pattern only. On-ledger vote weights,
+weighted votes, and votes by a non-operator party are the subject of separate
+CIPs, and delegation is independent of all three. See
+[Relationship to other governance work](#relationship-to-other-governance-work).
+
 This CIP adds one delegation template and the smallest change to `DsoRules` that
 can use it. All changes are additive and comply with
 [Smart Contract Upgrades (SCU)][scu]. This CIP adds these items:
@@ -247,8 +252,9 @@ replace the delegated party at any time.
 actions. An SV that trusts a party to cast its votes has already expressed that
 trust. A Daml-level allowlist also implies an enforcement guarantee that the
 model does not give, because the operator can ignore the allowlist and vote
-directly. Digital Asset answers this question upstream in the `voteType` of
-[splice#6247][pr6247], so a second classification here would compete with it.
+directly. Which actions a non-operator party may vote on is also the subject of
+a separate CIP, so a classification here would compete with that one. The
+`voteType` of [splice#6247][pr6247] prototypes the same distinction.
 
 **CIP-0103 compatibility.** `voterParty` controls the relay choices, and
 `voterParty` can be an externally-hosted party. A delegated submission can
@@ -277,22 +283,30 @@ useful on its own, so the relationship is compatibility and not dependence.
   Automation closes a vote request, and confirmation and execution are operator
   responsibilities.
 
-### Relationship to in-flight upstream work
+### Relationship to other governance work
 
-Two upstream drafts change which party holds the vote of an SV.
+The wider change to SV governance is arriving as several separate CIPs. The
+first covers on-ledger vote weights. Weighted votes and votes by a non-operator
+party are still under discussion, and each needs its own CIP. Splice maintainers
+have confirmed that delegation is separate from all of them and therefore needs
+a CIP of its own, which is this one.
+
+The division of labor is clean. Those CIPs decide which party holds the vote of
+an SV, and how much that vote counts. This CIP decides how the party that holds
+the vote can let another party exercise it. It therefore composes with any of
+them: whichever party ends up holding the vote is the party that signs the
+delegation. The template and both relay choices do not change.
+
+Two Splice drafts prototype that wider work.
 [splice#6247][pr6247] ("Dso Governance POC", Digital Asset) adds `SvRightOwner`,
 which holds a `rightOwnerParty` and separate vote and reward weights.
 [splice#5567][pr5567] moves SV weight management on-ledger. Neither conflicts
-with this CIP in substance. They decide which party holds the vote, and this CIP
-decides how that party can let another party exercise it. Under
-[splice#6247][pr6247], the rights owner signs the delegation instead of the
-operator, and nothing else changes.
-
-One conflict of form needs a decision from the maintainers.
-[splice#6247][pr6247] appends `rightOwnerCid : Optional (ContractId SvRightOwner)`
-to the same two choices, in the same trailing position that this CIP uses for
-`voterParty : Optional Party`. Both arguments are optional, so they can coexist,
-but the change that merges first sets the order. See open question 1.
+with this CIP in substance, but one conflict of form needs a decision from the
+maintainers. [splice#6247][pr6247] appends
+`rightOwnerCid : Optional (ContractId SvRightOwner)` to the same two choices, in
+the same trailing position that this CIP uses for `voterParty : Optional Party`.
+Both arguments are optional, so they can coexist, but the change that merges
+first sets the order. See open question 1.
 
 ## Trust model
 
@@ -397,9 +411,7 @@ them across participants.
 1. **Argument order against [splice#6247][pr6247].** Which argument comes first
    on `DsoRules_RequestVote` and `DsoRules_CastVote`, `voterParty` or
    `rightOwnerCid`? If both changes merge, how does `getAndValidateVotingParty`
-   in [splice#6247][pr6247] interact with the co-controller in this CIP? Does
-   `SvRightOwner` make the delegation redundant in the target state of Digital
-   Asset?
+   in [splice#6247][pr6247] interact with the co-controller in this CIP?
 2. **Delegation uniqueness.** Should the ledger enforce at most one live
    delegation for each SV, and at most one source SV for each delegated party? A contract key on `sv`, a registry, or a duplicate-create guard could
    do this. The alternative is to keep both rules as client conventions. The
@@ -413,6 +425,11 @@ them across participants.
 
 ## Changelog
 
+- **2026-08-21:** Stated the scope against the other governance CIPs. Splice
+  maintainers have confirmed that delegation needs a separate CIP from on-ledger
+  weights, weighted votes, and non-operator votes. Recast the upstream-work
+  subsection accordingly, and dropped the open question asking whether
+  `SvRightOwner` makes delegation redundant, which that answer settles.
 - **2026-08-21:** Cut the draft to about half its length, to match the level of
   detail in comparable Daml-layer CIPs. Removed the test matrix, the list of
   votable action constructors, and the per-file artifact list. Merged the Trust
